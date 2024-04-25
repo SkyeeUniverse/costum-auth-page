@@ -5,8 +5,13 @@ import bcyrpt from "bcrypt";
 
 export async function POST(request: NextRequest) {
   const { username, password, email } = await request.json();
+  const hashedPassword = await bcyrpt.hash(password, 15);
   await connectDB();
-  await usersModel.create({ username, password, email });
+  const existingUser = await usersModel.findOne({ email });
+  if (existingUser) {
+    return NextResponse.json({ message: "Email sudah ada" }, { status: 400 });
+  }
+  await usersModel.create({ username, password: hashedPassword, email });
   return NextResponse.json({ message: "User created" }, { status: 201 });
 }
 
